@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Brython </title>
+
+</head>
+
+<script src="brython.js"></script>
+<script src="brython_stdlib.js"></script>
+
+<body onload="brython()">
+
+<canvas id="zone8" width="500" height="500"></canvas>
+<button id="b1">Press to draw</button>
+
+</body>
+<script type="text/python" id="script0">
+from browser import document, html,console
+import math
+
+canvas = document["zone8"]
+ctx = canvas.getContext("2d")
+
+x = 20
+
+def draw(e):
+    global x
+    ctx.beginPath()
+    ctx.arc(x, 100, 100, 0, 2 * math.pi)
+    x += 15
+    console.log(x);
+    ctx.stroke()
+
+document["b1"].bind("click", draw)
+</script>
+
+</html>
