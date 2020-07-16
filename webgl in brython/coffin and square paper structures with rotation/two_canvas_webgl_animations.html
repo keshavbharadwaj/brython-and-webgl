@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Brython </title>
+
+</head>
+
+<script src="brython.js"></script>
+<script src="brython_stdlib.js"></script>
+
+<body onload="brython()">
+
+<canvas id="zone8" width="500" height="500"></canvas>
+<canvas id="zone9" width="500" height="500"></canvas>
+<button id="b1">Coffin</button>
+<button id="b2">CUBE</button>
+
+</body>
+
+<script src="glmat/dist/gl-matrix.js "></script>
+
+
+<script type="text/python" id="script1">
+from browser import document, html,console,window
+import math
+global x
+x=0.1
+run = None
+canvas = document["zone8"]
+gl = canvas.getContext("webgl")
+
+def createShader(gl, sourceCode, type):
+    shader = gl.createShader( type )
+    gl.shaderSource( shader, sourceCode )
+    gl.compileShader( shader )
+
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)==False):
+        console.log("Not_possible")
+
+    return shader
+
+
+def draw():
+
+    global x
+    vertex_src="""
+    attribute vec3 a_pos;
+    uniform mat4 model;
+    void main()
+    {gl_Position=vec4(a_pos,1.0)*model;
+    }
+    """
+
+    fragment_src="""
+
+    void main()
+    {  gl_FragColor=vec4(0.5,0.0,0.5,1.0);
+
+    }
+    """
+
+    vertexShader = createShader(gl,vertex_src, gl.VERTEX_SHADER)
+    fragmentShader = createShader(gl,fragment_src, gl.FRAGMENT_SHADER)
+
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+
+
+    coffinindices=[0,1,5,4,3,2,1,5,2,2,5,4,
+             6,11,10,7,8,9,10,6,7,7,10,9,
+             12,13,14,14,15,12,#working
+             16,17,18,18,17,19,#working
+             20,21,22,22,21,23,
+             24,25,26,26,25,27,
+             28,29,30,30,29,31,
+             32,33,34,34,33,35,
+    ]
+    scale=0.3
+
+
+
+
+    coffin=[ -0.75*scale,1.5*scale,1*scale,
+             -0.5*scale,-1*scale,1*scale,
+             0*scale,-1*scale,1*scale,
+             0.25*scale,1.5*scale,1*scale,
+             0*scale,2*scale,1*scale,
+             -0.5*scale,2*scale,1*scale,
+
+            -0.75*scale,1.5*scale,0.75*scale,
+            -0.5*scale,-1*scale,0.75*scale,
+             0*scale,-1*scale,0.75*scale,
+             0.25*scale,1.5*scale,0.75*scale,
+             0*scale,2*scale,0.75*scale,
+            -0.5*scale,2*scale,0.75*scale,
+
+            -0.5*scale,-1*scale,1*scale,
+             0*scale,-1*scale,1*scale,
+             0*scale,-1*scale,0.75*scale,
+             -0.5*scale,-1*scale,0.75*scale,
+
+             0*scale,-1*scale,1*scale,
+             0.25*scale,1.5*scale,1*scale,
+            0*scale,-1*scale,0.75*scale,
+             0.25*scale,1.5*scale,0.75*scale,
+
+            0.25*scale,1.5*scale,1*scale,
+             0*scale,2*scale,1*scale,
+             0.25*scale,1.5*scale,0.75*scale,
+             0*scale,2*scale,0.75*scale,
+
+              0*scale,2*scale,1*scale,
+             -0.5*scale,2*scale,1*scale,
+              0*scale,2*scale,0.75*scale,
+             -0.5*scale,2*scale,0.75*scale,
+
+             -0.5*scale,2*scale,1*scale,
+             -0.75*scale,1.5*scale,1*scale,
+             -0.5*scale, 2*scale, 0.75*scale,
+             -0.75*scale, 1.5*scale, 0.75*scale,
+
+             -0.75*scale,1.5*scale,1*scale,
+             -0.5*scale,-1*scale,1*scale,
+             -0.75*scale,1.5*scale, 0.75*scale,
+            -0.5*scale, -1*scale, 0.75*scale
+
+             ]
+
+    vertices = window.Float32Array.new(coffin)
+
+    indices=window.Uint16Array.new(coffinindices)
+    program = gl.createProgram()
+    gl.attachShader(program, vertexShader)
+    gl.attachShader(program, fragmentShader)
+    gl.linkProgram(program)
+    gl.useProgram(program)
+
+    if (gl.getProgramParameter( program, gl.LINK_STATUS)==False ):
+        console.log("hoge")
+    VBO = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, VBO)
+    gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW)
+
+
+    EBO = gl.createBuffer()
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices, gl.STATIC_DRAW)
+
+
+    gl.enableVertexAttribArray(gl.getAttribLocation(program, 'a_pos'))
+    gl.vertexAttribPointer(gl.getAttribLocation(program,'a_pos'),3,gl.FLOAT,False,12,0)
+
+
+    model=gl.getUniformLocation(program, 'model')
+
+
+    gl.enable(gl.DEPTH_TEST)
+    gl.depthFunc(gl.LEQUAL)
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    gl.clearDepth(1.0)
+
+    x+=0.01
+    console.log(x)
+
+    rot_x2=[1,0,0,0,
+            0,math.cos(x),-math.sin(x),0,
+            0,math.sin(x),math.cos(x),0,
+            0,0,0,1
+            ]
+    rotation=window.Float32Array.new(rot_x2)
+    gl.uniformMatrix4fv(model,False, rotation)
+
+
+    gl.drawElements(gl.TRIANGLES,len(coffinindices),gl.UNSIGNED_SHORT,0)
+
+def animloop(t):
+    global run
+    run = window.requestAnimationFrame(animloop)
+    draw()
+
+def change(event):
+    global run
+    if run is None:
+        # start animation
+        animloop(1)
+    else:
+        # stop animation
+        window.cancelAnimationFrame(run)
+        run = None
+
+document["b1"].bind("click", change)
+</script>
+
+
+<script type="text/python" id="script2">
+from browser import document, html,console,window
+import math
+global x
+x=0.1
+run = None
+canvas = document["zone9"]
+gl = canvas.getContext("webgl")
+
+def createShader(gl, sourceCode, type):
+    shader = gl.createShader( type )
+    gl.shaderSource( shader, sourceCode )
+    gl.compileShader( shader )
+
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)==False):
+        console.log("Not_possible")
+
+    return shader
+
+
+def draw():
+
+    global x
+    vertex_src="""
+    attribute vec3 a_pos;
+    uniform mat4 model;
+    void main()
+    {gl_Position=vec4(a_pos,1.0)*model;
+    }
+    """
+
+    fragment_src="""
+
+    void main()
+    {  gl_FragColor=vec4(0.5,0.0,0.5,1.0);
+
+    }
+    """
+
+    vertexShader = createShader(gl,vertex_src, gl.VERTEX_SHADER)
+    fragmentShader = createShader(gl,fragment_src, gl.FRAGMENT_SHADER)
+
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    scale=0.45
+    positions = [
+
+    -1.0, -1.0,  1.0,
+     1.0, -1.0,  1.0,
+     1.0,  1.0,  1.0,
+    -1.0,  1.0,  1.0,
+
+
+    -1.0, -1.0, -1.0,
+    -1.0,  1.0, -1.0,
+     1.0,  1.0, -1.0,
+     1.0, -1.0, -1.0,
+
+
+    -1.0,  1.0, -1.0,
+    -1.0,  1.0,  1.0,
+     1.0,  1.0,  1.0,
+     1.0,  1.0, -1.0,
+
+
+    -1.0, -1.0, -1.0,
+     1.0, -1.0, -1.0,
+     1.0, -1.0,  1.0,
+    -1.0, -1.0,  1.0,
+
+
+     1.0, -1.0, -1.0,
+     1.0,  1.0, -1.0,
+     1.0,  1.0,  1.0,
+     1.0, -1.0,  1.0,
+    -1.0, -1.0, -1.0,
+    -1.0, -1.0,  1.0,
+    -1.0,  1.0,  1.0,
+    -1.0,  1.0, -1.0,
+  ]
+    for i in range(len(positions)):
+        positions[i]*=scale
+
+    indices = [
+    0,  1,  2,      0,  2,  3,
+    4,  5,  6,      4,  6,  7,
+    8,  9,  10,     8,  10, 11,
+    12, 13, 14,     12, 14, 15,
+    16, 17, 18,     16, 18, 19,
+    20, 21, 22,     20, 22, 23,
+  ]
+    vertices = window.Float32Array.new(positions)
+
+    indices=window.Uint16Array.new(indices)
+    program = gl.createProgram()
+    gl.attachShader(program, vertexShader)
+    gl.attachShader(program, fragmentShader)
+    gl.linkProgram(program)
+    gl.useProgram(program)
+
+    if (gl.getProgramParameter( program, gl.LINK_STATUS)==False ):
+        console.log("hoge")
+    VBO = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, VBO)
+    gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW)
+
+
+    EBO = gl.createBuffer()
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices, gl.STATIC_DRAW)
+
+
+    gl.enableVertexAttribArray(gl.getAttribLocation(program, 'a_pos'))
+    gl.vertexAttribPointer(gl.getAttribLocation(program,'a_pos'),3,gl.FLOAT,False,12,0)
+
+
+    model=gl.getUniformLocation(program, 'model')
+
+
+    gl.enable(gl.DEPTH_TEST)
+    gl.depthFunc(gl.LEQUAL)
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    gl.clearDepth(1.0)
+
+    x+=0.01
+    console.log(x)
+
+    rot_x2=[1,0,0,0,
+            0,math.cos(x),-math.sin(x),0,
+            0,math.sin(x),math.cos(x),0,
+            0,0,0,1
+            ]
+    rotation=window.Float32Array.new(rot_x2)
+    gl.uniformMatrix4fv(model,False, rotation)
+
+
+    gl.drawElements(gl.TRIANGLES,len(indices),gl.UNSIGNED_SHORT,0)
+
+def animloop(t):
+    global run
+    run = window.requestAnimationFrame(animloop)
+    draw()
+
+def change(event):
+    global run
+    if run is None:
+        animloop(1)
+    else:
+
+        window.cancelAnimationFrame(run)
+        run = None
+
+document["b2"].bind("click", change)
+</script>
+
+</html>

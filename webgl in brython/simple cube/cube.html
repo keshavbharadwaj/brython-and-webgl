@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Brython </title>
+
+</head>
+
+<script src="brython.js"></script>
+<script src="brython_stdlib.js"></script>
+<body onload="brython()">
+
+<canvas id="zone8" width="500" height="500"></canvas>
+<button id="b1">Press to draw</button>
+
+</body>
+<script type="text/python" id="script0">
+from browser import document, html,console,window
+
+import math
+
+
+
+
+canvas = document["zone8"]
+gl = canvas.getContext("webgl")
+
+def createShader(gl, sourceCode, type):
+    shader = gl.createShader( type )
+    gl.shaderSource( shader, sourceCode )
+    gl.compileShader( shader )
+
+    if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)==False):
+        console.log("Not_possible")
+
+    return shader
+
+
+def draw(e):
+
+    from browser import window
+    vertex_src="""
+    attribute vec3 a_pos;
+
+    void main()
+    {gl_Position=vec4(a_pos,1.0);
+    }
+    """
+
+    fragment_src="""
+
+    void main()
+    {  gl_FragColor=vec4(1.0,0.0,1.0,1.0);
+
+    }
+    """
+
+    vertexShader = createShader(gl,vertex_src, gl.VERTEX_SHADER)
+    fragmentShader = createShader(gl,fragment_src, gl.FRAGMENT_SHADER)
+
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+    vertices = [-0.5, -0.5, 0.5,
+             0.5, -0.5, 0.5,
+             0.5,  0.5, 0.5,
+            -0.5,  0.5, 0.5,
+
+            -0.5, -0.5, -0.5,
+             0.5, -0.5, -0.5,
+             0.5,  0.5, -0.5,
+            -0.5,  0.5, -0.5]
+
+    indices = [0, 1, 2, 2, 3, 0,
+               4, 5, 6, 6, 7, 4,
+               4, 5, 1, 1, 0, 4,
+               6, 7, 3, 3, 2, 6,
+               5, 6, 2, 2, 1, 5,
+               7, 4, 0, 0, 3, 7]
+    vertices = window.Float32Array.new(vertices)
+    console.log(vertices)
+    indices=window.Uint16Array.new(indices)
+    program = gl.createProgram()
+    gl.attachShader(program, vertexShader)
+    gl.attachShader(program, fragmentShader)
+    gl.linkProgram(program)
+    gl.useProgram(program)
+
+    if (gl.getProgramParameter( program, gl.LINK_STATUS)==False ):
+        console.log("hoge")
+
+    VBO = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, VBO)
+    gl.bufferData(gl.ARRAY_BUFFER,vertices,gl.STATIC_DRAW)
+    console.log(gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE))
+
+    EBO = gl.createBuffer()
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, EBO)
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,indices, gl.STATIC_DRAW)
+    console.log(gl.getBufferParameter(gl.ELEMENT_ARRAY_BUFFER, gl.BUFFER_SIZE))
+
+    gl.enableVertexAttribArray(gl.getAttribLocation(program, 'a_pos'))
+    gl.vertexAttribPointer(gl.getAttribLocation(program,'a_pos'),3,gl.FLOAT,False,12,0)
+
+
+    gl.drawElements(gl.TRIANGLES,len(indices),gl.UNSIGNED_SHORT,0)
+
+
+
+
+
+
+document["b1"].bind("click", draw)
+</script>
+
+</html>
