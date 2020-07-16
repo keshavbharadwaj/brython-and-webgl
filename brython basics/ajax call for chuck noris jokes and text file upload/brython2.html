@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Brython</title>
+
+</head>
+
+<script src="brython.js"></script>
+<script src="brython_stdlib.js"></script>
+
+<body onload="brython()">
+    <h1>Brython basics</h1>
+    <h2 id="Hello"> </h2>
+    <h3><button id="alert">ALERT MADU</button></h3>
+    <h4 id ="fool">Hello {name}</h4>
+    <input type='text' id='text' placeholder="Enter something">
+    <span id='output'></span>
+    <h5>
+        <button id="joke-madu">joke kodu</button></h5>
+    <div id="joke" class="card">want joke</div>
+    <br>
+    <input type="file" id="file-upload">
+    <br>
+    <textarea id="file" cols="60" rows="10"></textarea>
+    <canvas type="canvas" width="400" height="300" style="boder-color:#000;boder-style:solid;boder-width:1px"></canvas>
+
+    <script type="text/python" id="script0">
+        from browser import document,console,alert
+
+        def show(e):
+            console.log("Hello")
+            alert('DARUDE SANDSTORM')
+            document['Hello'] <="HELLO WORLD"
+
+        document['alert'].bind('click',show)
+
+    </script>
+
+    <script type="text/python" id="script1">
+        from browser import document,console
+
+        def show_text(e):
+            document['output'].textContent = e.target.value;
+
+        document['text'].bind('input',show_text)
+
+    </script>
+
+    <script type="text/python" id="script2">
+        from browser import document
+        from browser.template import Template
+
+        Template(document['fool']).render(name='keshav')
+    </script>
+
+    <!--ajax call-->
+    <script type="text/python" id="script3">
+        from browser import document,ajax,console,alert
+
+        url='https://api.chucknorris.io/jokes/random'
+
+        def on_complete(req):
+            import json
+            data=json.loads(req.responseText)
+            document['joke'].text=data['value']
+
+        def jokes(e):
+            req=ajax.ajax()
+            req.open('GET',url,True)
+            req.bind('complete',on_complete)
+            document['joke'].text='Thinking......'
+            req.send()
+
+        document['joke-madu'].bind('click',jokes)
+     </script>
+    <!--file from window-->
+     <script type="text/python" id="script4">
+        from browser import document,window
+
+        def file_read(e):
+            def onload(e):
+                document['file'].value=e.target.result
+            file=document['file-upload'].files[0]
+            reader = window.FileReader.new()
+            reader.readAsText(file)
+            reader.bind('load',onload)
+
+
+        document['file-upload'].bind('input',file_read)
+
+    </script>
+
+</body>
+
+
+</html>
